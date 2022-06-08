@@ -103,11 +103,14 @@ NUM_BLADES=3;
 //    Blade pitch - typically between 75% to 133% of blade length for aircraft. Lower pitch has better climb performance, higher pitch has better cruise performance. Defaults to same value as propeller arc radius if negative. For a low-speed pullcopter or boat propellers, a pitch of at least 2×ArcRadius works well.
 BLADE_PITCH=40;
 // The blades cant align exactly with the hub, offset has to be adjusted for each preset. Excess blade will be removed (can be seen as a green cut at the bottom)
-HUB_OFFSET=1.701;
+HUB_OFFSET=.001;
 //Should be 0, lift higher and it won't touch the bed
 HUB_LIFT=0.00;
-// Length of the base (in mm) (min 8, max less than 23, from measures)
-HUB_LENGTH = 15;
+
+//Length passed to blade function. Adjust to get desired real blade length over hub
+BLADE_HUB_LENGTH = 19;
+// Length of the cylinder base (in mm) (min 8, max less than 23, from measures)
+CYLINDER_LENGTH = 15;
 //Diameter of the base (in mm)
 HUB_DIAMETER=22;
 //Diameter of the motor axis (in mm)
@@ -126,14 +129,14 @@ ELEN_FRAC=1.01;
 FAIRING=3;
 // Based on demo_printable_boatprop() function
 difference() {
-    translate([0,0,HUB_LENGTH+HUB_OFFSET]) rotate([180,0,0]) // flip upside-down
+    translate([0,0,BLADE_HUB_LENGTH+HUB_OFFSET]) rotate([180,0,0]) // flip upside-down
     propeller(
         blades=NUM_BLADES,
         propdia=TOTAL_DIAMETER,
         hubdia=HUB_DIAMETER+0.02,
         bladepitch=BLADE_PITCH,
         maxchordfrac=MAX_CHORD_FRAC,
-        hublen=HUB_LENGTH,
+        hublen=BLADE_HUB_LENGTH,
         elenfrac=ELEN_FRAC,
         naca_root=NACA_ROOT,
         centerline=0,
@@ -146,8 +149,8 @@ difference() {
 
 }
 difference(){
-translate ([0,0,HUB_LIFT]) cylinder(HUB_LENGTH, r=HUB_DIAMETER/2, $fn=HUB_FACES);   // add the hub
-translate([0,0,-.1+HUB_LIFT]) cylinder(HUB_LENGTH+.2, r=HUB_HOLE_DIAMETER/2, $fn=HUB_FACES);   // add the hub
+translate ([0,0,HUB_LIFT]) cylinder(CYLINDER_LENGTH, r=HUB_DIAMETER/2, $fn=HUB_FACES);   // add the hub
+translate([0,0,-.1+HUB_LIFT]) cylinder(CYLINDER_LENGTH+.2, r=HUB_HOLE_DIAMETER/2, $fn=HUB_FACES);   // add the hub
 }
 
 // === END CUSTOMIZED ===
@@ -208,7 +211,7 @@ module propblade(
     esemimajor = elenfrac*length;           // semimajor axis of ellipse
     maxchordlen = 2*maxchordfrac*length;    // full minor axis of ellipse
     hh = min(maxchordlen, hublen);  // hub height constraint for blade need not be longer than max chord
-    ztrans = length*root_transition;    // transition point where root becomes mid airfoil    
+    ztrans = length*root_transition;    // transition point where root becomes mid airfoil
     blen = length - ztrans;     // length of blade past the transition
     slicelen = slices > 0 ? length/slices : 1;  // size of cross-section slice
     airfoilsegs = profilepoints > 0 ?   // number of segments on one side of airfoil
@@ -431,7 +434,7 @@ M = maximum camber as fraction of chord (A/10)
 P = position of maximum camber as fraction of chord (B/10)
 T = thickness as a fraction of chord (CC/100)
 */
-        
+
 // primary function - return a polygon representing an airfoil cross-section
 // chordlen = length of chord in mm
 // origin = fraction of chord at which to center the polygon (0=front, 1=tail)
